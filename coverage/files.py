@@ -4,6 +4,7 @@
 """File wrangling."""
 
 import fnmatch
+import hashlib
 import ntpath
 import os
 import os.path
@@ -75,6 +76,25 @@ def canonical_filename(filename):
     return CANONICAL_FILENAME_CACHE[filename]
 
 
+def relative_rootname(filename, source_relative=None):
+    """
+    :param filename: Full file path
+    :param source_relative: Relative directory where `filename` is contained.
+    :return: Returns a path relative to `source_relative`
+    """
+    if source_relative is None:
+        return filename
+    # Remove repetitions separators and relative paths.
+    source_relative = os.path.normpath(source_relative)
+    filename = os.path.normpath(filename)
+    # The absolute path is important because we need to check the driver's letter
+    filename = os.path.abspath(filename)
+    try:
+        return os.path.relpath(filename, source_relative)
+    except ValueError:
+        return filename
+
+
 def flat_rootname(filename):
     """A base for a flat file name to correspond to this file.
 
@@ -86,7 +106,12 @@ def flat_rootname(filename):
 
     """
     name = ntpath.splitdrive(filename)[1]
-    return re.sub(r"[\\/.:]", "_", name)
+    name = re.sub(r"[\\/.:]", "_", name)
+    # On windows, files name too long result in failure to create html file.
+    # Generating an md5 hash should avoid name conflict.
+    if env.WINDOWS and len(name) > 100:
+        name = hashlib.md5(name).hexdigest()
+    return name
 
 
 if env.WINDOWS:

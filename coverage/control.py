@@ -1058,7 +1058,8 @@ class Coverage(object):
         reporter = AnnotateReporter(self, self.config)
         reporter.report(morfs, directory=directory)
 
-    def html_report(self, morfs=None, directory=None, ignore_errors=None,
+    def html_report(self, morfs=None, directory=None,
+                    source_relative=None, ignore_errors=None,
                     omit=None, include=None, extra_css=None, title=None,
                     skip_covered=None):
         """Generate an HTML report.
@@ -1066,6 +1067,9 @@ class Coverage(object):
         The HTML is written to `directory`.  The file "index.html" is the
         overview starting point, with links to more detailed pages for
         individual modules.
+
+        `source_relative` file names saved in `directory` will be relative to this path,
+        which will result in (C:\\somedir > C:\\somedir\\file.html > file.html)
 
         `extra_css` is a path to a file of other CSS to apply on the page.
         It will be copied into the HTML directory.
@@ -1083,6 +1087,7 @@ class Coverage(object):
             ignore_errors=ignore_errors, report_omit=omit, report_include=include,
             html_dir=directory, extra_css=extra_css, html_title=title,
             skip_covered=skip_covered,
+            source_relative=source_relative
             )
         reporter = HtmlReporter(self, self.config)
         return reporter.report(morfs)

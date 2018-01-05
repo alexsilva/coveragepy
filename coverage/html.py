@@ -11,7 +11,7 @@ import shutil
 import coverage
 from coverage import env
 from coverage.backward import iitems
-from coverage.files import flat_rootname
+from coverage.files import flat_rootname, relative_rootname
 from coverage.misc import CoverageException, file_be_gone, Hasher, isolate_module
 from coverage.report import Reporter
 from coverage.results import Numbers
@@ -172,7 +172,13 @@ class HtmlReporter(Reporter):
 
     def html_file(self, fr, analysis):
         """Generate an HTML file for one source file."""
-        rootname = flat_rootname(fr.relative_filename())
+        relative_filename = fr.relative_filename()
+
+        source_relative = getattr(self.config, 'source_relative', None)
+        relative_filename = relative_rootname(relative_filename, source_relative)
+
+        rootname = flat_rootname(relative_filename)
+
         html_filename = rootname + ".html"
         html_path = os.path.join(self.directory, html_filename)
 
@@ -284,12 +290,11 @@ class HtmlReporter(Reporter):
         })
 
         write_html(html_path, html)
-
         # Save this file's information for the index file.
         index_info = {
             'nums': nums,
             'html_filename': html_filename,
-            'relative_filename': fr.relative_filename(),
+            'relative_filename': relative_filename,
         }
         self.files.append(index_info)
         self.status.set_index_info(rootname, index_info)
