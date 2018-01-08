@@ -66,6 +66,9 @@ def read_data(fname):
 
 def write_html(fname, html):
     """Write `html` to `fname`, properly encoded."""
+    if env.WINDOWS:  # Makes the way safe
+        fname = "\\\\?\\" + os.path.abspath(os.path.normpath(fname))
+
     with open(fname, "wb") as fout:
         fout.write(html.encode('ascii', 'xmlcharrefreplace'))
 
@@ -174,10 +177,11 @@ class HtmlReporter(Reporter):
         """Generate an HTML file for one source file."""
         relative_filename = fr.relative_filename()
 
+        rootname = flat_rootname(relative_filename)
+
+        # Shows relative paths in the browser
         source_relative = getattr(self.config, 'source_relative', None)
         relative_filename = relative_rootname(relative_filename, source_relative)
-
-        rootname = flat_rootname(relative_filename)
 
         html_filename = rootname + ".html"
         html_path = os.path.join(self.directory, html_filename)

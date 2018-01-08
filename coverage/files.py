@@ -106,12 +106,7 @@ def flat_rootname(filename):
 
     """
     name = ntpath.splitdrive(filename)[1]
-    name = re.sub(r"[\\/.:]", "_", name)
-    # On windows, files name too long result in failure to create html file.
-    # Generating an md5 hash should avoid name conflict.
-    if env.WINDOWS and len(name) > 100:
-        name = hashlib.md5(name).hexdigest()
-    return name
+    return re.sub(r"[\\/.:]", "_", name)
 
 
 if env.WINDOWS:
