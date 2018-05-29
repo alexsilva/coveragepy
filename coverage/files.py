@@ -4,6 +4,7 @@
 """File wrangling."""
 
 import fnmatch
+import hashlib
 import ntpath
 import os
 import os.path
@@ -95,6 +96,7 @@ def relative_rootname(filename, source_relative=None):
         return filename
 
 
+@contract(filename='unicode', returns='unicode')
 def flat_rootname(filename):
     """A base for a flat file name to correspond to this file.
 
@@ -105,8 +107,12 @@ def flat_rootname(filename):
     For example, the file a/b/c.py will return 'a_b_c_py'
 
     """
-    name = ntpath.splitdrive(filename)[1]
-    return re.sub(r"[\\/.:]", "_", name)
+    dirpath = ntpath.dirname(filename)
+
+    if isinstance(dirpath, unicode):
+        dirpath = dirpath.encode('UTF-8')
+
+    return hashlib.sha1(dirpath).hexdigest() + "_" + ntpath.basename(filename)
 
 
 if env.WINDOWS:
