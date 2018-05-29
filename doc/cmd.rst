@@ -114,7 +114,7 @@ the processes that multiprocessing creates.  Best practice is to use the
 configuration file for all options.
 
 .. _multiprocessing: https://docs.python.org/3/library/multiprocessing.html
-.. _greenlet: http://greenlet.readthedocs.io/en/latest/
+.. _greenlet: https://greenlet.readthedocs.io/
 .. _gevent: http://www.gevent.org/
 .. _eventlet: http://eventlet.net/
 
@@ -170,6 +170,13 @@ could affect the measurement process.  The possible warnings include:
   You asked coverage.py to measure module XXX, but it had already been imported
   when coverage started.  This meant coverage.py couldn't monitor its
   execution.
+
+* "Already imported a file that will be measured: XXX (already-imported)"
+
+  File XXX had already been imported when coverage.py started measurement. Your
+  setting for ``--source`` or ``--include`` indicates that you wanted to
+  measure that file.  Lines will be missing from the coverage report since the
+  execution during import hadn't been measured.
 
 * "--include is ignored because --source is set (include-ignored)"
 

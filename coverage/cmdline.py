@@ -44,14 +44,14 @@ class Opts(object):
     )
     debug = optparse.make_option(
         '', '--debug', action='store', metavar="OPTS",
-        help="Debug options, separated by commas",
+        help="Debug options, separated by commas. [env: COVERAGE_DEBUG]",
     )
     directory = optparse.make_option(
         '-d', '--directory', action='store', metavar="DIR",
         help="Write the output files to DIR.",
     )
     fail_under = optparse.make_option(
-        '', '--fail-under', action='store', metavar="MIN", type="int",
+        '', '--fail-under', action='store', metavar="MIN", type="float",
         help="Exit with a status of 2 if the total coverage is less than MIN.",
     )
     help = optparse.make_option(
@@ -115,7 +115,11 @@ class Opts(object):
     )
     rcfile = optparse.make_option(
         '', '--rcfile', action='store',
-        help="Specify configuration file.  Defaults to '.coveragerc'",
+        help=(
+            "Specify configuration file. "
+            "By default '.coveragerc', 'setup.cfg' and 'tox.ini' are tried. "
+            "[env: COVERAGE_RCFILE]"
+        ),
     )
     source = optparse.make_option(
         '', '--source', action='store', metavar="SRC1,SRC2,...",
@@ -124,7 +128,7 @@ class Opts(object):
     timid = optparse.make_option(
         '', '--timid', action='store_true',
         help=(
-            "Use a simpler but slower trace method.  Try this if you get "
+            "Use a simpler but slower trace method. Try this if you get "
             "seemingly impossible results!"
         ),
     )
@@ -475,6 +479,7 @@ class CoverageScript(object):
             include=include,
             debug=debug,
             concurrency=options.concurrency,
+            check_preimported=True,
             )
 
         if options.action == "debug":
@@ -528,7 +533,8 @@ class CoverageScript(object):
                 self.coverage.set_option("report:fail_under", options.fail_under)
 
             fail_under = self.coverage.get_option("report:fail_under")
-            if should_fail_under(total, fail_under):
+            precision = self.coverage.get_option("report:precision")
+            if should_fail_under(total, fail_under, precision):
                 return FAIL_UNDER
 
         return OK
@@ -655,7 +661,7 @@ class CoverageScript(object):
                 self.coverage.load()
                 data = self.coverage.data
                 print(info_header("data"))
-                print("path: %s" % self.coverage.data_files.filename)
+                print("path: %s" % self.coverage._data_files.filename)
                 if data:
                     print("has_arcs: %r" % data.has_arcs())
                     summary = data.line_counts(fullpath=True)

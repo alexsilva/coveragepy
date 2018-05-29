@@ -5,6 +5,7 @@
 
 import fnmatch
 import os
+import os.path
 import sys
 import textwrap
 import warnings
@@ -581,7 +582,7 @@ class SourceOmitIncludeTest(OmitIncludeTestsMixin, CoverageTest):
         cov = coverage.Coverage(source=["pkg1"], include=["pkg2"])
         with self.assert_warnings(cov, ["--include is ignored because --source is set"]):
             cov.start()
-        cov.stop()
+        cov.stop()      # pragma: nested
 
     def test_source_package_as_dir(self):
         # pkg1 is a directory, since we cd'd into tests/modules in setUp.
@@ -611,6 +612,13 @@ class SourceOmitIncludeTest(OmitIncludeTestsMixin, CoverageTest):
         # The omit arg is by path, so need to be in the modules directory.
         self.chdir(self.nice_file(TESTS_DIR, 'modules'))
         lines = self.coverage_usepkgs(source=["pkg1"], omit=["pkg1/p1b.py"])
+        self.filenames_in(lines, "p1a")
+        self.filenames_not_in(lines, "p1b")
+        self.assertEqual(lines['p1c'], 0)
+
+    def test_source_package_as_package_part_omitted(self):
+        # https://bitbucket.org/ned/coveragepy/issues/638/run-omit-is-ignored-since-45
+        lines = self.coverage_usepkgs(source=["pkg1"], omit=["*/p1b.py"])
         self.filenames_in(lines, "p1a")
         self.filenames_not_in(lines, "p1b")
         self.assertEqual(lines['p1c'], 0)

@@ -3,22 +3,20 @@
 
 language: python
 
+cache: pip
 sudo: false
 python:
-  - '2.6'
   - '2.7'
-  - '3.3'
   - '3.4'
   - '3.5'
   - '3.6'
   - 'pypy'
+  - 'pypy3.5'
 
 env:
   matrix:
     - COVERAGE_COVERAGE=no
     - COVERAGE_COVERAGE=yes
-
-sudo: false
 
 install:
   - pip install -r requirements/ci.pip

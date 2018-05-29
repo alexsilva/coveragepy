@@ -183,7 +183,7 @@ class PluginTest(CoverageTest):
                     return [("hello", "world")]
 
             def coverage_init(reg, options):
-                reg.add_noop(Plugin())
+                reg.add_file_tracer(Plugin())
             """)
         debug_out = StringIO()
         cov = coverage.Coverage(debug=["sys"])
@@ -191,10 +191,15 @@ class PluginTest(CoverageTest):
         cov.set_option("run:plugins", ["plugin_sys_info"])
         cov.load()
 
-        out_lines = debug_out.getvalue().splitlines()
+        out_lines = [line.strip() for line in debug_out.getvalue().splitlines()]
+        if env.C_TRACER:
+            self.assertIn('plugins.file_tracers: plugin_sys_info.Plugin', out_lines)
+        else:
+            self.assertIn('plugins.file_tracers: plugin_sys_info.Plugin (disabled)', out_lines)
+        self.assertIn('plugins.configurers: -none-', out_lines)
         expected_end = [
             "-- sys: plugin_sys_info.Plugin -------------------------------",
-            " hello: world",
+            "hello: world",
             "-- end -------------------------------------------------------",
             ]
         self.assertEqual(expected_end, out_lines[-len(expected_end):])
@@ -207,7 +212,7 @@ class PluginTest(CoverageTest):
                 pass
 
             def coverage_init(reg, options):
-                reg.add_noop(Plugin())
+                reg.add_configurer(Plugin())
             """)
         debug_out = StringIO()
         cov = coverage.Coverage(debug=["sys"])
@@ -215,7 +220,9 @@ class PluginTest(CoverageTest):
         cov.set_option("run:plugins", ["plugin_no_sys_info"])
         cov.load()
 
-        out_lines = debug_out.getvalue().splitlines()
+        out_lines = [line.strip() for line in debug_out.getvalue().splitlines()]
+        self.assertIn('plugins.file_tracers: -none-', out_lines)
+        self.assertIn('plugins.configurers: plugin_no_sys_info.Plugin', out_lines)
         expected_end = [
             "-- sys: plugin_no_sys_info.Plugin ----------------------------",
             "-- end -------------------------------------------------------",
@@ -271,8 +278,8 @@ class FileTracerTest(CoverageTest):
             self.skipTest("Plugins are only supported with the C tracer.")
 
 
-class GoodPluginTest(FileTracerTest):
-    """Tests of plugin happy paths."""
+class GoodFileTracerTest(FileTracerTest):
+    """Tests of file tracer plugin happy paths."""
 
     def test_plugin1(self):
         self.make_file("simple.py", """\
@@ -558,8 +565,8 @@ class GoodPluginTest(FileTracerTest):
             cov.analysis("fictional.py")
 
 
-class BadPluginTest(FileTracerTest):
-    """Test error handling around plugins."""
+class BadFileTracerTest(FileTracerTest):
+    """Test error handling around file tracer plugins."""
 
     def run_plugin(self, module_name):
         """Run a plugin with the given module_name.
@@ -621,10 +628,10 @@ class BadPluginTest(FileTracerTest):
 
         # There should be a warning explaining what's happening, but only one.
         # The message can be in two forms:
-        #   Disabling plugin '...' due to previous exception
+        #   Disabling plug-in '...' due to previous exception
         # or:
-        #   Disabling plugin '...' due to an exception:
-        msg = "Disabling plugin '%s.%s' due to " % (module_name, plugin_name)
+        #   Disabling plug-in '...' due to an exception:
+        msg = "Disabling plug-in '%s.%s' due to " % (module_name, plugin_name)
         warnings = stderr.count(msg)
         self.assertEqual(warnings, 1)
 
@@ -848,3 +855,18 @@ class BadPluginTest(FileTracerTest):
         self.run_bad_plugin(
             "bad_plugin", "Plugin", our_error=False, excmsg="an integer is required",
         )
+
+
+class ConfigurerPluginTest(CoverageTest):
+    """Test configuring plugins."""
+
+    run_in_temp_dir = False
+
+    def test_configurer_plugin(self):
+        cov = coverage.Coverage()
+        cov.set_option("run:plugins", ["tests.plugin_config"])
+        cov.start()
+        cov.stop()      # pragma: nested
+        excluded = cov.get_option("report:exclude_lines")
+        self.assertIn("pragma: custom", excluded)
+        self.assertIn("pragma: or whatever", excluded)

@@ -10,7 +10,7 @@
 - Update CHANGES.rst, including release date.
 - Update README.rst
     - "New in x.y:"
-    - version number in the commits-since badge
+    - Python versions supported
 - Update docs
     - Version, date and python versions in doc/index.rst
     - Version and copyright date in doc/conf.py
@@ -62,21 +62,6 @@
         - show/hide the proper versions.
 - Tag the tree
     - hg tag -m "Coverage 3.0.1" coverage-3.0.1
-- Update nedbatchelder.com
-    - Blog post?
-- Update readthedocs
-    - visit https://readthedocs.org/projects/coverage/versions/
-        - find the latest tag in the inactive list, edit it, make it active.
-    - IF NOT BETA:
-        - visit https://readthedocs.org/dashboard/coverage/versions/
-        - change the default version to the new version
-- Update bitbucket:
-    - Issue tracker should get new version number in picker.
-    # Note: don't delete old version numbers: it marks changes on the tickets
-    # with that number.
-- Announce on coveragepy-announce@googlegroups.com .
-- Announce on TIP.
-
 - Bump version:
     - coverage/version.py
         - increment version number
@@ -84,6 +69,26 @@
             - set to alpha-0 if just released
     - CHANGES.rst
         - add an "Unreleased" section to the top.
+- push hg changes
+- Update nedbatchelder.com
+    - Blog post?
+- Update readthedocs
+    - visit https://readthedocs.org/projects/coverage/versions/
+        - find the latest tag in the inactive list, edit it, make it active.
+        - keep just the latest version of each x.y release, make the rest inactive.
+    - IF NOT BETA:
+        - visit https://readthedocs.org/projects/coverage/builds/
+        - wait for the new tag build to finish successfully.
+        - visit https://readthedocs.org/dashboard/coverage/versions/
+        - change the default version to the new version
+- Update bitbucket:
+    - Issue tracker should get new version number in picker.
+    # Note: don't delete old version numbers: it marks changes on the tickets
+    # with that number.
+- Visit the fixed issues on bitbucket and mention the version it was fixed in.
+- Announce on coveragepy-announce@googlegroups.com .
+- Announce on TIP.
+
 
 * Testing
 

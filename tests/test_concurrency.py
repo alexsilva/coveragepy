@@ -335,7 +335,7 @@ MULTI_CODE = """
     import sys
 
     def process_worker_main(args):
-        # Need to pause, or the tasks go too quick, and some processes
+        # Need to pause, or the tasks go too quickly, and some processes
         # in the pool don't get any work, and then don't record data.
         time.sleep(0.02)
         ret = work(*args)
@@ -359,7 +359,7 @@ MULTI_CODE = """
     """
 
 
-@flaky(max_runs=10)         # Sometimes a test fails due to inherent randomness. Try one more time.
+@flaky(max_runs=10)         # Sometimes a test fails due to inherent randomness. Try more times.
 class MultiprocessingTest(CoverageTest):
     """Test support of the multiprocessing module."""
 
@@ -403,7 +403,7 @@ class MultiprocessingTest(CoverageTest):
                 last_line = self.squeezed_lines(out)[-1]
                 self.assertRegex(last_line, r"multi.py \d+ 0 100%")
 
-    def test_multiprocessing(self):
+    def test_multiprocessing_simple(self):
         nprocs = 3
         upto = 30
         code = (SQUARE_OR_CUBE_WORK + MULTI_CODE).format(NPROCS=nprocs, UPTO=upto)
@@ -464,7 +464,7 @@ def test_coverage_stop_in_threads():
     has_started_coverage = []
     has_stopped_coverage = []
 
-    def run_thread():
+    def run_thread():           # pragma: nested
         """Check that coverage is stopping properly in threads."""
         deadline = time.time() + 5
         ident = threading.currentThread().ident
@@ -480,11 +480,11 @@ def test_coverage_stop_in_threads():
     cov = coverage.coverage()
     cov.start()
 
-    t = threading.Thread(target=run_thread)
-    t.start()
+    t = threading.Thread(target=run_thread)             # pragma: nested
+    t.start()                                           # pragma: nested
 
-    time.sleep(0.1)
-    cov.stop()
+    time.sleep(0.1)                                     # pragma: nested
+    cov.stop()                                          # pragma: nested
     time.sleep(0.1)
 
     assert has_started_coverage == [t.ident]
@@ -513,7 +513,7 @@ def test_thread_safe_save_data(tmpdir):
         for module_name in module_names:
             import_local_file(module_name)
 
-        def random_load():
+        def random_load():                              # pragma: nested
             """Import modules randomly to stress coverage."""
             while should_run[0]:
                 module_name = random.choice(module_names)
@@ -525,16 +525,16 @@ def test_thread_safe_save_data(tmpdir):
         # results right after stopping coverage collection with the threads
         #  still running.
         duration = 0.01
-        for i in range(3):
+        for _ in range(3):
             cov = coverage.coverage()
             cov.start()
 
-            threads = [threading.Thread(target=random_load) for i in range(10)]
-            should_run[0] = True
-            for t in threads:
+            threads = [threading.Thread(target=random_load) for _ in range(10)]     # pragma: nested
+            should_run[0] = True                    # pragma: nested
+            for t in threads:                       # pragma: nested
                 t.start()
 
-            time.sleep(duration)
+            time.sleep(duration)                    # pragma: nested
 
             cov.stop()
 
@@ -546,7 +546,7 @@ def test_thread_safe_save_data(tmpdir):
             for t in threads:
                 t.join()
 
-            if (not imported) and duration < 10:
+            if (not imported) and duration < 10:    # pragma: only failure
                 duration *= 2
 
     finally:

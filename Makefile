@@ -26,6 +26,7 @@ clean:
 	-rm -f setuptools-*.egg distribute-*.egg distribute-*.tar.gz
 	-rm -rf doc/_build doc/_spell doc/sample_html_beta
 	-rm -rf .tox_kits
+	-rm -rf .cache .pytest_cache
 
 sterile: clean
 	-rm -rf .tox*
@@ -50,10 +51,10 @@ test:
 TOX_SMOKE_ARGS = -n 6 -m "not expensive" --maxfail=3 $(ARGS)
 
 smoke:
-	COVERAGE_NO_PYTRACER=1 tox -e py26,py33 -- $(TOX_SMOKE_ARGS)
+	COVERAGE_NO_PYTRACER=1 tox -e py27,py34 -- $(TOX_SMOKE_ARGS)
 
 pysmoke:
-	COVERAGE_NO_CTRACER=1 tox -e py26,py33 -- $(TOX_SMOKE_ARGS)
+	COVERAGE_NO_CTRACER=1 tox -e py27,py34 -- $(TOX_SMOKE_ARGS)
 
 metacov:
 	COVERAGE_COVERAGE=yes tox $(ARGS)

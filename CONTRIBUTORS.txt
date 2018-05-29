@@ -7,6 +7,7 @@ useful bug reports, have been made by:
 Adi Roiban
 Alex Gaynor
 Alex Groce
+Alex Sandro
 Alexander Todorov
 Andrew Hoos
 Anthony Sottile
@@ -33,6 +34,7 @@ Cosimo Lupo
 Dan Riti
 Dan Wandschneider
 Danek Duvall
+Daniel Hahler
 Danny Allen
 David Christian
 David MacIver
@@ -63,6 +65,7 @@ Josh Williams
 Julian Berman
 Krystian Kichewko
 Kyle Altendorf
+Lars Hupfeldt Nielsen
 Leonardo Pistone
 Lex Berezhny
 Loïc Dachary
@@ -77,6 +80,8 @@ Mickie Betz
 Nathan Land
 Noel O'Boyle
 Olivier Grisel
+Ori Avtalion
+pankajp
 Pablo Carballo
 Patrick Mezard
 Peter Baughman
@@ -95,6 +100,7 @@ Stephen Finucane
 Steve Leonard
 Steve Peak
 Ted Wexler
+Thijs Triemstra
 Titus Brown
 Ville Skyttä
 Yury Selivanov

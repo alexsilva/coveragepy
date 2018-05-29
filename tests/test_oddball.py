@@ -118,7 +118,7 @@ class RecursionTest(CoverageTest):
         cov = coverage.Coverage()
         self.start_import_stop(cov, "recur")
 
-        pytrace = (cov.collector.tracer_name() == "PyTracer")
+        pytrace = (cov._collector.tracer_name() == "PyTracer")
         expected_missing = [3]
         if pytrace:                                 # pragma: no metacov
             expected_missing += [9, 10, 11]
@@ -397,15 +397,6 @@ class ExceptionTest(CoverageTest):
 
 class DoctestTest(CoverageTest):
     """Tests invoked with doctest should measure properly."""
-
-    def setUp(self):
-        super(DoctestTest, self).setUp()
-
-        # This test case exists because Python 2.4's doctest module didn't play
-        # well with coverage. Nose fixes the problem by monkeypatching doctest.
-        # I want to be sure there's no monkeypatch and that I'm getting the
-        # doctest module that users of coverage will get.
-        assert 'doctest' not in sys.modules
 
     def test_doctest(self):
         self.check_coverage('''\

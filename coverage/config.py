@@ -175,8 +175,12 @@ class CoverageConfig(object):
     def __init__(self):
         """Initialize the configuration attributes to their defaults."""
         # Metadata about the config.
+        # We tried to read these config files.
         self.attempted_config_files = []
-        self.config_files = []
+        # We did read these config files, but maybe didn't find any content for us.
+        self.config_files_read = []
+        # The file that gave us our configuration.
+        self.config_file = None
 
         # Defaults for [run] and [report]
         self._include = None
@@ -199,7 +203,7 @@ class CoverageConfig(object):
 
         # Defaults for [report]
         self.exclude_list = DEFAULT_EXCLUDE[:]
-        self.fail_under = 0
+        self.fail_under = 0.0
         self.ignore_errors = False
         self.report_include = None
         self.report_omit = None
@@ -262,7 +266,7 @@ class CoverageConfig(object):
         if not files_read:
             return False
 
-        self.config_files.extend(files_read)
+        self.config_files_read.extend(files_read)
 
         any_set = False
         try:
@@ -305,9 +309,14 @@ class CoverageConfig(object):
         # then it was used.  If we're piggybacking on someone else's file,
         # then it was only used if we found some settings in it.
         if our_file:
-            return True
+            used = True
         else:
-            return any_set
+            used = any_set
+
+        if used:
+            self.config_file = filename
+
+        return used
 
     CONFIG_FILE_OPTIONS = [
         # These are *args for _set_attr_from_config_option:
@@ -325,23 +334,23 @@ class CoverageConfig(object):
         ('data_file', 'run:data_file'),
         ('debug', 'run:debug', 'list'),
         ('disable_warnings', 'run:disable_warnings', 'list'),
-        ('_include', 'run:include', 'list'),
         ('note', 'run:note'),
-        ('_omit', 'run:omit', 'list'),
         ('parallel', 'run:parallel', 'boolean'),
         ('plugins', 'run:plugins', 'list'),
+        ('run_include', 'run:include', 'list'),
+        ('run_omit', 'run:omit', 'list'),
         ('source', 'run:source', 'list'),
         ('timid', 'run:timid', 'boolean'),
 
         # [report]
         ('exclude_list', 'report:exclude_lines', 'regexlist'),
-        ('fail_under', 'report:fail_under', 'int'),
+        ('fail_under', 'report:fail_under', 'float'),
         ('ignore_errors', 'report:ignore_errors', 'boolean'),
-        ('_include', 'report:include', 'list'),
-        ('_omit', 'report:omit', 'list'),
         ('partial_always_list', 'report:partial_branches_always', 'regexlist'),
         ('partial_list', 'report:partial_branches', 'regexlist'),
         ('precision', 'report:precision', 'int'),
+        ('report_include', 'report:include', 'list'),
+        ('report_omit', 'report:omit', 'list'),
         ('show_missing', 'report:show_missing', 'boolean'),
         ('skip_covered', 'report:skip_covered', 'boolean'),
         ('sort', 'report:sort'),
@@ -425,6 +434,34 @@ class CoverageConfig(object):
         raise CoverageException("No such option: %r" % option_name)
 
 
+def config_files_to_try(config_file):
+    """What config files should we try to read?
+
+    Returns a list of tuples:
+        (filename, is_our_file, was_file_specified)
+    """
+
+    # Some API users were specifying ".coveragerc" to mean the same as
+    # True, so make it so.
+    if config_file == ".coveragerc":
+        config_file = True
+    specified_file = (config_file is not True)
+    if not specified_file:
+        # No file was specified. Check COVERAGE_RCFILE.
+        config_file = os.environ.get('COVERAGE_RCFILE')
+        if config_file:
+            specified_file = True
+    if not specified_file:
+        # Still no file specified. Default to .coveragerc
+        config_file = ".coveragerc"
+    files_to_try = [
+        (config_file, True, specified_file),
+        ("setup.cfg", False, False),
+        ("tox.ini", False, False),
+    ]
+    return files_to_try
+
+
 def read_coverage_config(config_file, **kwargs):
     """Read the coverage.py configuration.
 
@@ -435,10 +472,7 @@ def read_coverage_config(config_file, **kwargs):
             setting values in the configuration.
 
     Returns:
-        config_file, config:
-            config_file is the value to use for config_file in other
-            invocations of coverage.
-
+        config:
             config is a CoverageConfig object read from the appropriate
             configuration file.
 
@@ -449,31 +483,14 @@ def read_coverage_config(config_file, **kwargs):
 
     # 2) from a file:
     if config_file:
-        # Some API users were specifying ".coveragerc" to mean the same as
-        # True, so make it so.
-        if config_file == ".coveragerc":
-            config_file = True
-        specified_file = (config_file is not True)
-        if not specified_file:
-            config_file = ".coveragerc"
+        files_to_try = config_files_to_try(config_file)
 
-        for fname, our_file in [(config_file, True),
-                                ("setup.cfg", False),
-                                ("tox.ini", False)]:
+        for fname, our_file, specified_file in files_to_try:
             config_read = config.from_file(fname, our_file=our_file)
-            is_config_file = fname == config_file
-
-            if not config_read and is_config_file and specified_file:
-                raise CoverageException("Couldn't read '%s' as a config file" % fname)
-
             if config_read:
                 break
-
-        for attr in ('_omit', '_include'):
-            value = getattr(config, attr)
-            if value is not None:
-                for section in ('run', 'report'):
-                    setattr(config, section + attr, value)
+            if specified_file:
+                raise CoverageException("Couldn't read '%s' as a config file" % fname)
 
     # 3) from environment variables:
     env_data_file = os.environ.get('COVERAGE_FILE')
@@ -492,4 +509,4 @@ def read_coverage_config(config_file, **kwargs):
     config.html_dir = os.path.expanduser(config.html_dir)
     config.xml_output = os.path.expanduser(config.xml_output)
 
-    return config_file, config
+    return config

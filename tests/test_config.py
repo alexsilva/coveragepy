@@ -103,6 +103,21 @@ class ConfigTest(CoverageTest):
         cov = coverage.Coverage()
         self.assertEqual(cov.config.debug, ["dataio", "pids", "callers", "fooey"])
 
+    def test_rcfile_from_environment(self):
+        self.make_file("here.ini", """\
+            [run]
+            data_file = overthere.dat
+            """)
+        self.set_environ("COVERAGE_RCFILE", "here.ini")
+        cov = coverage.Coverage()
+        self.assertEqual(cov.config.data_file, "overthere.dat")
+
+    def test_missing_rcfile_from_environment(self):
+        self.set_environ("COVERAGE_RCFILE", "nowhere.ini")
+        msg = "Couldn't read 'nowhere.ini' as a config file"
+        with self.assertRaisesRegex(CoverageException, msg):
+            coverage.Coverage()
+
     def test_parse_errors(self):
         # Im-parsable values raise CoverageException, with details.
         bad_configs_and_msgs = [
@@ -357,7 +372,7 @@ class ConfigFileTest(UsingModulesMixin, CoverageTest):
 
         self.assertEqual(cov.get_exclude_list(), ["if 0:", r"pragma:?\s+no cover", "another_tab"])
         self.assertTrue(cov.config.ignore_errors)
-        self.assertEqual(cov.config.run_omit, cov.config.report_omit)
+        self.assertEqual(cov.config.run_omit, ["twenty"])
         self.assertEqual(cov.config.report_omit, ["one", "another", "some_more", "yet_more"])
         self.assertEqual(cov.config.report_include, ["thirty"])
         self.assertEqual(cov.config.precision, 3)

@@ -50,6 +50,8 @@ Coverage.py
 .. :history: 20160726T161300, updated for 4.2
 .. :history: 20161226T160400, updated for 4.3
 .. :history: 20170116T180100, updated for 4.3.2
+.. :history: 20180203T130300, updated for 4.5
+.. :history: 20180210T125300, updated for 4.5.1
 
 
 Coverage.py is a tool for measuring code coverage of Python programs. It
@@ -62,12 +64,12 @@ not.
 
 .. ifconfig:: not prerelease
 
-    The latest version is coverage.py 4.4.2, released November 5th 2017.  It
+    The latest version is coverage.py 4.5.1, released February 10th 2018.  It
     is supported on:
 
     * Python versions 2.6, 2.7, 3.3, 3.4, 3.5, 3.6, and 3.7.
 
-    * PyPy2 5.9 and PyPy3 5.9.
+    * PyPy2 5.10 and PyPy3 5.10.
 
     * Jython 2.7.1, though only for running code, not reporting.
 
@@ -75,21 +77,21 @@ not.
 
 .. ifconfig:: prerelease
 
-    The latest version is coverage.py 4.4b1, released April 4th 2017.  It is
+    The latest version is coverage.py 5.0a1, released May 28th 2018.  It is
     supported on:
 
-    * Python versions 2.6, 2.7, 3.3, 3.4, 3.5, and 3.6.
+    * Python versions 2.7, 3.4, 3.5, 3.6, and 3.7.
 
-    * PyPy2 5.6 and PyPy3 5.5.
+    * PyPy2 6.0 and PyPy3 6.0.
 
     * Jython 2.7.1, though only for running code, not reporting.
 
     * IronPython 2.7.7, though only for running code, not reporting.
 
     **This is a pre-release build.  The usual warnings about possible bugs
-    apply.** The latest stable version is coverage.py 4.3.4, `described here`_.
+    apply.** The latest stable version is coverage.py 4.5.1, `described here`_.
 
-.. _described here: https://nedbatchelder.com/code/coverage
+.. _described here: http://coverage.readthedocs.io/
 
 
 Quick start
@@ -143,7 +145,7 @@ Getting started is easy:
         Then visit htmlcov/index.html in your browser, to see a
         `report like this one`_.
 
-.. _coverage.py page on the Python Package Index: https://pypi.python.org/pypi/coverage
+.. _coverage.py page on the Python Package Index: https://pypi.org/project/coverage/
 .. _report like this: https://nedbatchelder.com/files/sample_coverage_html/index.html
 .. _report like this one: https://nedbatchelder.com/files/sample_coverage_html_beta/index.html
 
@@ -165,7 +167,7 @@ parts that you know aren't interesting.  See :ref:`source` and :ref:`excluding`
 for details.
 
 .. _pytest: http://doc.pytest.org
-.. _pytest-cov: http://pytest-cov.readthedocs.io
+.. _pytest-cov: https://pytest-cov.readthedocs.io/
 
 
 .. _contact:

@@ -5,10 +5,101 @@
 Change history for Coverage.py
 ==============================
 
-Unreleases
-----------
+    .. When updating the "Unreleased" header to a specific version, use this
+    .. format.  Don't forget the jump target:
+    ..
+    ..
+    ..  .. _changes_781:
+    ..
+    ..  Version 7.8.1 --- 2021-07-27
+    ..  ----------------------------
 
-None yet.
+.. _changes_50a1:
+
+Version 5.0a1 --- 2018-05-28
+----------------------------
+
+- Coverage.py no longer supports Python 2.6 or 3.3.
+
+- The location of the configuration file can now be specified with a
+  ``COVERAGE_RCFILE`` environment variable, as requested in `issue 650`_.
+
+- A new warning (already-imported) is issued if measurable files have already
+  been imported before coverage.py started measurement.  See
+  :ref:`cmd_warnings` for more information.
+
+- Running coverage many times for small runs in a single process should be
+  faster, closing `issue 625`_.  Thanks, David MacIver.
+
+- Large HTML report pages load faster.  Thanks, pankajp.
+
+.. _issue 625: https://bitbucket.org/ned/coveragepy/issues/625/lstat-dominates-in-the-case-of-small
+.. _issue 650: https://bitbucket.org/ned/coveragepy/issues/650/allow-setting-configuration-file-location
+
+
+.. _changes_451:
+
+Version 4.5.1 --- 2018-02-10
+----------------------------
+
+- Now that 4.5 properly separated the ``[run] omit`` and ``[report] omit``
+  settings, an old bug has become apparent.  If you specified a package name
+  for ``[run] source``, then omit patterns weren't matched inside that package.
+  This bug (`issue 638`_) is now fixed.
+
+- On Python 3.7, reporting about a decorated function with no body other than a
+  docstring would crash coverage.py with an IndexError (`issue 640`_).  This is
+  now fixed.
+
+- Configurer plugins are now reported in the output of ``--debug=sys``.
+
+.. _issue 638: https://bitbucket.org/ned/coveragepy/issues/638/run-omit-is-ignored-since-45
+.. _issue 640: https://bitbucket.org/ned/coveragepy/issues/640/indexerror-reporting-on-an-empty-decorated
+
+
+.. _changes_45:
+
+Version 4.5 --- 2018-02-03
+--------------------------
+
+- A new kind of plugin is supported: configurators are invoked at start-up to
+  allow more complex configuration than the .coveragerc file can easily do.
+  See :ref:`api_plugin` for details.  This solves the complex configuration
+  problem described in `issue 563`_.
+
+- The ``fail_under`` option can now be a float.  Note that you must specify the
+  ``[report] precision`` configuration option for the fractional part to be
+  used.  Thanks to Lars Hupfeldt Nielsen for help with the implementation.
+  Fixes `issue 631`_.
+
+- The ``include`` and ``omit`` options can be specified for both the ``[run]``
+  and ``[report]`` phases of execution.  4.4.2 introduced some incorrect
+  interactions between those phases, where the options for one were confused
+  for the other.  This is now corrected, fixing `issue 621`_ and `issue 622`_.
+  Thanks to Daniel Hahler for seeing more clearly than I could.
+
+- The ``coverage combine`` command used to always overwrite the data file, even
+  when no data had been read from apparently combinable files.  Now, an error
+  is raised if we thought there were files to combine, but in fact none of them
+  could be used.  Fixes `issue 629`_.
+
+- The ``coverage combine`` command could get confused about path separators
+  when combining data collected on Windows with data collected on Linux, as
+  described in `issue 618`_.  This is now fixed: the result path always uses
+  the path separator specified in the ``[paths]`` result.
+
+- On Windows, the HTML report could fail when source trees are deeply nested,
+  due to attempting to create HTML filenames longer than the 250-character
+  maximum.  Now filenames will never get much larger than 200 characters,
+  fixing `issue 627`_.  Thanks to Alex Sandro for helping with the fix.
+
+.. _issue 563: https://bitbucket.org/ned/coveragepy/issues/563/platform-specific-configuration
+.. _issue 618: https://bitbucket.org/ned/coveragepy/issues/618/problem-when-combining-windows-generated
+.. _issue 621: https://bitbucket.org/ned/coveragepy/issues/621/include-ignored-warning-when-using
+.. _issue 622: https://bitbucket.org/ned/coveragepy/issues/622/report-omit-overwrites-run-omit
+.. _issue 627: https://bitbucket.org/ned/coveragepy/issues/627/failure-generating-html-reports-when-the
+.. _issue 629: https://bitbucket.org/ned/coveragepy/issues/629/multiple-use-of-combine-leads-to-empty
+.. _issue 631: https://bitbucket.org/ned/coveragepy/issues/631/precise-coverage-percentage-value
 
 
 .. _changes_442:
@@ -182,7 +273,7 @@ Version 4.3.2 --- 2017-01-16
 
 - Let's say you ran the HTML report over and over again in the same output
   directory, with ``--skip-covered``. And imagine due to your heroic
-  test-writing efforts, a file just acheived the goal of 100% coverage. With
+  test-writing efforts, a file just achieved the goal of 100% coverage. With
   coverage.py 4.3, the old HTML file with the less-than-100% coverage would be
   left behind.  This file is now properly deleted.
 
@@ -406,7 +497,7 @@ Work from the PyCon 2016 Sprints!
 - The `test_helpers` module has been moved into a separate pip-installable
   package: `unittest-mixins`_.
 
-.. _automatic subprocess measurement: http://coverage.readthedocs.io/en/latest/subprocess.html
+.. _automatic subprocess measurement: https://coverage.readthedocs.io/en/latest/subprocess.html
 .. _issue 199: https://bitbucket.org/ned/coveragepy/issues/199/add-a-way-to-sort-the-text-report
 .. _issue 231: https://bitbucket.org/ned/coveragepy/issues/231/various-default-behavior-in-report-phase
 .. _issue 298: https://bitbucket.org/ned/coveragepy/issues/298/show-in-html-report-that-the-columns-are
@@ -415,7 +506,7 @@ Work from the PyCon 2016 Sprints!
 .. _issue 478: https://bitbucket.org/ned/coveragepy/issues/478/help-shows-silly-program-name-when-running
 .. _issue 484: https://bitbucket.org/ned/coveragepy/issues/484/multiprocessing-greenlet-concurrency
 .. _issue 492: https://bitbucket.org/ned/coveragepy/issues/492/subprocess-coverage-strange-detection-of
-.. _unittest-mixins: https://pypi.python.org/pypi/unittest-mixins
+.. _unittest-mixins: https://pypi.org/project/unittest-mixins/
 
 
 .. _changes_41:
@@ -1334,7 +1425,7 @@ Version 3.5.3 --- 2012-09-29
 .. _issue 194: https://bitbucket.org/ned/coveragepy/issues/194/filelocatorrelative_filename-could-mangle
 .. _issue 195: https://bitbucket.org/ned/coveragepy/issues/195/pyo-file-handling-in-codeunit
 .. _issue 197: https://bitbucket.org/ned/coveragepy/issues/197/line-numbers-in-html-report-do-not-align
-.. _tox: http://tox.readthedocs.io/
+.. _tox: https://tox.readthedocs.io/
 
 
 .. _changes_352:
@@ -1734,7 +1825,7 @@ Version 3.2b4 --- 2009-12-01
 
 - On Python 3.x, setuptools has been replaced by `Distribute`_.
 
-.. _Distribute: https://pypi.python.org/pypi/distribute
+.. _Distribute: https://pypi.org/project/distribute/
 
 
 Version 3.2b3 --- 2009-11-23

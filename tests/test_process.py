@@ -144,6 +144,40 @@ class ProcessTest(CoverageTest):
         data.read_file(".coverage")
         self.assertEqual(data.line_counts()['b_or_c.py'], 7)
 
+    def test_combine_no_usable_files(self):
+        # https://bitbucket.org/ned/coveragepy/issues/629/multiple-use-of-combine-leads-to-empty
+        self.make_b_or_c_py()
+        out = self.run_command("coverage run b_or_c.py b")
+        self.assertEqual(out, 'done\n')
+        self.assert_exists(".coverage")
+        self.assertEqual(self.number_of_data_files(), 1)
+
+        # Make bogus data files.
+        self.make_file(".coverage.bad1", "This isn't a coverage data file.")
+        self.make_file(".coverage.bad2", "This isn't a coverage data file.")
+
+        # Combine the parallel coverage data files into .coverage, but nothing is readable.
+        status, out = self.run_command_status("coverage combine")
+        self.assertEqual(status, 1)
+
+        for n in "12":
+            self.assert_exists(".coverage.bad{0}".format(n))
+            warning_regex = (
+                r"Coverage.py warning: Couldn't read data from '.*\.coverage\.bad{0}': "
+                r"CoverageException: Doesn't seem to be a coverage\.py data file".format(n)
+            )
+            self.assertRegex(out, warning_regex)
+        self.assertRegex(out, r"No usable data files")
+
+        # After combining, we should have a main file and two parallel files.
+        self.assertEqual(self.number_of_data_files(), 3)
+
+        # Read the coverage file and see that b_or_c.py has 6 lines
+        # executed (we only did b, not c).
+        data = coverage.CoverageData()
+        data.read_file(".coverage")
+        self.assertEqual(data.line_counts()['b_or_c.py'], 6)
+
     def test_combine_parallel_data_in_two_steps(self):
         self.make_b_or_c_py()
 
@@ -551,7 +585,34 @@ class ProcessTest(CoverageTest):
 
         self.assertIn("Trace function changed", out)
 
+    def test_warn_preimported(self):
+        self.make_file("hello.py", """\
+            import goodbye
+            import coverage
+            cov = coverage.Coverage(include=["good*"], check_preimported=True)
+            cov.start()
+            print(goodbye.f())
+            cov.stop()
+            """)
+        self.make_file("goodbye.py", """\
+            def f():
+                return "Goodbye!"
+            """)
+        goodbye_path = os.path.abspath("goodbye.py")
+
+        out = self.run_command("python hello.py")
+        self.assertIn("Goodbye!", out)
+
+        msg = (
+            "Coverage.py warning: "
+            "Already imported a file that will be measured: {0} "
+            "(already-imported)").format(goodbye_path)
+        self.assertIn(msg, out)
+
     def test_note(self):
+        if env.PYPY and env.PY3 and env.PYPYVERSION[:3] == (5, 10, 0):      # pragma: obscure
+            # https://bitbucket.org/pypy/pypy/issues/2729/pypy3-510-incorrectly-decodes-astral-plane
+            self.skipTest("Avoid incorrect decoding astral plane JSON chars")
         self.make_file(".coveragerc", """\
             [run]
             data_file = mydata.dat
@@ -564,7 +625,8 @@ class ProcessTest(CoverageTest):
         data.read_file("mydata.dat")
         infos = data.run_infos()
         self.assertEqual(len(infos), 1)
-        self.assertEqual(infos[0]['note'], u"These are musical notes: ♫𝅗𝅥♩")
+        expected = u"These are musical notes: ♫𝅗𝅥♩"
+        self.assertEqual(infos[0]['note'], expected)
 
     @pytest.mark.expensive
     def test_fullcoverage(self):                        # pragma: no metacov
@@ -628,6 +690,11 @@ class ProcessTest(CoverageTest):
             import coverage
             print("No warnings!")
             """)
+
+        # Some of our testing infrastructure can issue warnings.
+        # Turn it all off for the sub-process.
+        self.del_environ("COVERAGE_TESTING")
+
         out = self.run_command("python allok.py")
         self.assertEqual(out, "No warnings!\n")
 
@@ -638,9 +705,11 @@ class ProcessTest(CoverageTest):
                 pass
             """)
         self.make_file("run_twice.py", """\
+            import sys
             import coverage
 
-            for _ in [1, 2]:
+            for i in [1, 2]:
+                sys.stderr.write("Run %s\\n" % i)
                 inst = coverage.Coverage(source=['foo'])
                 inst.load()
                 inst.start()
@@ -651,15 +720,13 @@ class ProcessTest(CoverageTest):
         out = self.run_command("python run_twice.py")
         self.assertEqual(
             out,
+            "Run 1\n"
+            "Run 2\n"
             "Coverage.py warning: Module foo was previously imported, but not measured "
             "(module-not-measured)\n"
         )
 
     def test_module_name(self):
-        if sys.version_info < (2, 7):
-            # Python 2.6 thinks that coverage is a package that can't be
-            # executed
-            self.skipTest("-m doesn't work the same < Python 2.7")
         # https://bitbucket.org/ned/coveragepy/issues/478/help-shows-silly-program-name-when-running
         out = self.run_command("python -m coverage")
         self.assertIn("Use 'coverage help' for help", out)
@@ -701,6 +768,8 @@ class EnvironmentTest(CoverageTest):
         self.assert_tryexecfile_output(out_cov, out_py)
 
     def test_coverage_run_dir_is_like_python_dir(self):
+        if sys.version_info == (3, 5, 4, 'final', 0):       # pragma: obscure
+            self.skipTest("3.5.4 broke this: https://bugs.python.org/issue32551")
         with open(TRY_EXECFILE) as f:
             self.make_file("with_main/__main__.py", f.read())
 
@@ -779,10 +848,6 @@ class EnvironmentTest(CoverageTest):
         self.assert_tryexecfile_output(out_cov, out_py)
 
     def test_coverage_run_dashm_is_like_python_dashm_with__main__207(self):
-        if sys.version_info < (2, 7):
-            # Coverage.py isn't bug-for-bug compatible in the behavior
-            # of -m for Pythons < 2.7
-            self.skipTest("-m doesn't work the same < Python 2.7")
         # https://bitbucket.org/ned/coveragepy/issue/207
         self.make_file("package/__init__.py", "print('init')")
         self.make_file("package/__main__.py", "print('main')")
@@ -954,18 +1019,22 @@ class FailUnderTest(CoverageTest):
             """)
         st, _ = self.run_command_status("coverage run forty_two_plus.py")
         self.assertEqual(st, 0)
-        st, out = self.run_command_status("coverage report")
-        self.assertEqual(st, 0)
-        self.assertEqual(
-            self.last_line_squeezed(out),
-            "forty_two_plus.py 7 4 43%"
-        )
 
-    def test_report(self):
-        st, _ = self.run_command_status("coverage report --fail-under=43")
+    def test_report_43_is_ok(self):
+        st, out = self.run_command_status("coverage report --fail-under=43")
         self.assertEqual(st, 0)
-        st, _ = self.run_command_status("coverage report --fail-under=44")
+        self.assertEqual(self.last_line_squeezed(out), "forty_two_plus.py 7 4 43%")
+
+    def test_report_43_is_not_ok(self):
+        st, out = self.run_command_status("coverage report --fail-under=44")
         self.assertEqual(st, 2)
+        self.assertEqual(self.last_line_squeezed(out), "forty_two_plus.py 7 4 43%")
+
+    def test_report_42p86_is_not_ok(self):
+        self.make_file(".coveragerc", "[report]\nprecision = 2")
+        st, out = self.run_command_status("coverage report --fail-under=42.88")
+        self.assertEqual(st, 2)
+        self.assertEqual(self.last_line_squeezed(out), "forty_two_plus.py 7 4 42.86%")
 
 
 class FailUnderNoFilesTest(CoverageTest):

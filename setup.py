@@ -24,10 +24,8 @@ License :: OSI Approved :: Apache Software License
 Operating System :: OS Independent
 Programming Language :: Python
 Programming Language :: Python :: 2
-Programming Language :: Python :: 2.6
 Programming Language :: Python :: 2.7
 Programming Language :: Python :: 3
-Programming Language :: Python :: 3.3
 Programming Language :: Python :: 3.4
 Programming Language :: Python :: 3.5
 Programming Language :: Python :: 3.6
@@ -50,7 +48,7 @@ with open(cov_ver_py) as version_file:
     exec(compile(version_file.read(), cov_ver_py, 'exec'))
 
 with open("README.rst") as readme:
-    long_description = readme.read().replace("http://coverage.readthedocs.io", __url__)
+    long_description = readme.read().replace("https://coverage.readthedocs.io", __url__)
 
 with open("CONTRIBUTORS.txt", "rb") as contributors:
     paras = contributors.read().split(b"\n\n")
@@ -106,6 +104,8 @@ setup_args = dict(
     license='Apache 2.0',
     classifiers=classifier_list,
     url="https://bitbucket.org/ned/coveragepy",
+
+    python_requires=">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, <4",
 )
 
 # A replacement for the build_ext command which raises a single exception
